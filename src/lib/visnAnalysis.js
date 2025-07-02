@@ -2,80 +2,69 @@ import { supabase } from './supabaseClient';
 
 // Quick VISN analysis to check data consistency
 export const analyzeVISNData = async () => {
-  console.log('🔍 Analyzing VISN data...');
+  // Get all VISNs
+  const { data: visns, error: visnsError } = await supabase
+    .from('visns')
+    .select('*');
   
-  try {
-    // Get all VISNs
-    const { data: visns, error: visnsError } = await supabase
-      .from('visns')
-      .select('*');
-    
-    if (visnsError) {
-      console.error('Error fetching VISNs:', visnsError);
-      return { error: visnsError.message };
-    }
-
-    // Get all facilities with their VISN info
-    const { data: facilities, error: facilitiesError } = await supabase
-      .from('va_facilities')
-      .select('*');
-    
-    if (facilitiesError) {
-      console.error('Error fetching facilities:', facilitiesError);
-      return { error: facilitiesError.message };
-    }
-
-    // Analyze VISN distribution
-    const visnAnalysis = {
-      totalVISNs: visns?.length || 0,
-      totalFacilities: facilities?.length || 0,
-      visnList: visns || [],
-      facilityDistribution: {},
-      issues: []
-    };
-
-    // Group facilities by VISN
-    if (facilities) {
-      facilities.forEach(facility => {
-        const visnName = facility.visn || facility.visn_id || 'Unknown';
-        if (!visnAnalysis.facilityDistribution[visnName]) {
-          visnAnalysis.facilityDistribution[visnName] = {
-            count: 0,
-            facilities: []
-          };
-        }
-        visnAnalysis.facilityDistribution[visnName].count++;
-        visnAnalysis.facilityDistribution[visnName].facilities.push({
-          id: facility.id,
-          name: facility.name,
-          city: facility.city,
-          state: facility.state
-        });
-      });
-    }
-
-    // Check for issues
-    if (visnAnalysis.totalVISNs > 1) {
-      visnAnalysis.issues.push(`Multiple VISNs found (${visnAnalysis.totalVISNs}). Expected only VISN 7.`);
-    }
-
-    if (visnAnalysis.totalVISNs === 0) {
-      visnAnalysis.issues.push('No VISNs found in database.');
-    }
-
-    // Check if facilities are properly linked to VISNs
-    const unlinkedFacilities = facilities?.filter(f => !f.visn && !f.visn_id) || [];
-    if (unlinkedFacilities.length > 0) {
-      visnAnalysis.issues.push(`${unlinkedFacilities.length} facilities are not linked to any VISN.`);
-    }
-
-    console.log('✅ VISN analysis complete');
-    return visnAnalysis;
-
-  } catch (error) {
-    console.error('❌ VISN analysis failed:', error);
-    return { error: error.message };
+  if (visnsError) {
+    return { error: visnsError.message };
   }
+
+  // Get all facilities with their VISN info
+  const { data: facilities, error: facilitiesError } = await supabase
+    .from('va_facilities')
+    .select('*');
+  
+  if (facilitiesError) {
+    return { error: facilitiesError.message };
+  }
+
+  // Analyze VISN distribution
+  const visnAnalysis = {
+    totalVISNs: visns?.length || 0,
+    totalFacilities: facilities?.length || 0,
+    visnList: visns || [],
+    facilityDistribution: {},
+    issues: []
+  };
+
+  // Group facilities by VISN
+  if (facilities) {
+    facilities.forEach(facility => {
+      const visnName = facility.visn || facility.visn_id || 'Unknown';
+      if (!visnAnalysis.facilityDistribution[visnName]) {
+        visnAnalysis.facilityDistribution[visnName] = {
+          count: 0,
+          facilities: []
+        };
+      }
+      visnAnalysis.facilityDistribution[visnName].count++;
+      visnAnalysis.facilityDistribution[visnName].facilities.push({
+        id: facility.id,
+        name: facility.name,
+        city: facility.city,
+        state: facility.state
+      });
+    });
+  }
+
+  // Check for issues
+  if (visnAnalysis.totalVISNs > 1) {
+    visnAnalysis.issues.push(`Multiple VISNs found (${visnAnalysis.totalVISNs}). Expected only VISN 7.`);
+  }
+
+  if (visnAnalysis.totalVISNs === 0) {
+    visnAnalysis.issues.push('No VISNs found in database.');
+  }
+
+  // Check if facilities are properly linked to VISNs
+  const unlinkedFacilities = facilities?.filter(f => !f.visn && !f.visn_id) || [];
+  if (unlinkedFacilities.length > 0) {
+    visnAnalysis.issues.push(`${unlinkedFacilities.length} facilities are not linked to any VISN.`);
+  }
+
+  return visnAnalysis;
 };
 
 // Get detailed VISN breakdown

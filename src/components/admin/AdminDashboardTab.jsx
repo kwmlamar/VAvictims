@@ -84,7 +84,6 @@ const AdminDashboardTab = ({ systemStats, loadingStats }) => {
         });
 
       } catch (error) {
-        console.error('Error fetching recent activity:', error);
         setSystemStatus({
           database: 'Error',
           storage: 'Error',

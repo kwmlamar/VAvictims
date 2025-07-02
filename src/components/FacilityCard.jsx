@@ -3,11 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   MapPin, 
   AlertTriangle, 
-  Users, 
-  Calendar,
-  ExternalLink,
-  TrendingDown,
-  TrendingUp
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';

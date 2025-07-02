@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/components/ui/use-toast';
@@ -13,24 +13,30 @@ const DeveloperNotes = () => {
   const [newNote, setNewNote] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('developer_notes')
-      .select('*')
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('developer_notes')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      toast({ title: 'Error fetching notes', description: error.message, variant: 'destructive' });
-    } else {
-      setNotes(data);
+      if (error) throw error;
+      setNotes(data || []);
+    } catch (error) {
+      toast({
+        title: "Error fetching notes",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchNotes();
-  }, []);
+  }, [fetchNotes]);
 
   const handleSaveNote = async () => {
     if (newNote.trim() === '') {

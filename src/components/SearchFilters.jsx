@@ -51,7 +51,6 @@ const SearchFilters = ({ filters, onFilterChange }) => {
         setFacilityTypes(uniqueTypes);
         
       } catch (error) {
-        console.error('Error fetching filter options:', error);
         toast({
           title: "Failed to load filter options",
           description: "Could not load the list of states, VISNs, and types. Please try again later.",

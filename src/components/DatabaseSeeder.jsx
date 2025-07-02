@@ -26,7 +26,6 @@ const DatabaseSeeder = () => {
         });
       }
     } catch (error) {
-      console.error('Error seeding database:', error);
       toast({
         title: "Error",
         description: "An error occurred while seeding the database.",
@@ -59,7 +58,6 @@ const DatabaseSeeder = () => {
         });
       }
     } catch (error) {
-      console.error('Error clearing database:', error);
       toast({
         title: "Error",
         description: "An error occurred while clearing the database.",

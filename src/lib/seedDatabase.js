@@ -188,61 +188,50 @@ const sampleData = {
 // Function to seed the database
 export const seedDatabase = async () => {
   try {
-    console.log('Starting database seeding...');
-
     // Insert VISNs
-    console.log('Inserting VISNs...');
     const { error: visnsError } = await supabase
       .from('visns')
       .upsert(sampleData.visns);
-    if (visnsError) console.error('Error inserting VISNs:', visnsError);
+    if (visnsError) return { success: false, error: visnsError };
 
     // Insert Facilities
-    console.log('Inserting Facilities...');
     const { error: facilitiesError } = await supabase
       .from('va_facilities')
       .upsert(sampleData.facilities);
-    if (facilitiesError) console.error('Error inserting Facilities:', facilitiesError);
+    if (facilitiesError) return { success: false, error: facilitiesError };
 
     // Insert Scorecards
-    console.log('Inserting Scorecards...');
     const { error: scorecardsError } = await supabase
       .from('scorecards')
       .upsert(sampleData.scorecards);
-    if (scorecardsError) console.error('Error inserting Scorecards:', scorecardsError);
+    if (scorecardsError) return { success: false, error: scorecardsError };
 
     // Insert Analytics
-    console.log('Inserting Analytics...');
     const { error: analyticsError } = await supabase
       .from('analytics')
       .upsert(sampleData.analytics);
-    if (analyticsError) console.error('Error inserting Analytics:', analyticsError);
+    if (analyticsError) return { success: false, error: analyticsError };
 
     // Insert Congressional Representatives
-    console.log('Inserting Congressional Representatives...');
     const { error: repsError } = await supabase
       .from('congressional_representatives')
       .upsert(sampleData.congressional_representatives);
-    if (repsError) console.error('Error inserting Congressional Representatives:', repsError);
+    if (repsError) return { success: false, error: repsError };
 
     // Insert User Submitted Complaints
-    console.log('Inserting User Submitted Complaints...');
     const { error: complaintsError } = await supabase
       .from('user_submitted_complaints')
       .upsert(sampleData.user_submitted_complaints);
-    if (complaintsError) console.error('Error inserting User Submitted Complaints:', complaintsError);
+    if (complaintsError) return { success: false, error: complaintsError };
 
     // Insert OIG Report Entries
-    console.log('Inserting OIG Report Entries...');
     const { error: oigError } = await supabase
       .from('oig_report_entries')
       .upsert(sampleData.oig_report_entries);
-    if (oigError) console.error('Error inserting OIG Report Entries:', oigError);
+    if (oigError) return { success: false, error: oigError };
 
-    console.log('Database seeding completed!');
     return { success: true };
   } catch (error) {
-    console.error('Error seeding database:', error);
     return { success: false, error };
   }
 };
@@ -250,8 +239,6 @@ export const seedDatabase = async () => {
 // Function to clear all data (for testing)
 export const clearDatabase = async () => {
   try {
-    console.log('Clearing database...');
-    
     const tables = [
       'oig_report_entries',
       'user_submitted_complaints',
@@ -269,16 +256,12 @@ export const clearDatabase = async () => {
         .neq('id', '00000000-0000-0000-0000-000000000000'); // Keep system records
       
       if (error) {
-        console.error(`Error clearing ${table}:`, error);
-      } else {
-        console.log(`Cleared ${table}`);
+        return { success: false, error };
       }
     }
 
-    console.log('Database cleared!');
     return { success: true };
   } catch (error) {
-    console.error('Error clearing database:', error);
     return { success: false, error };
   }
 }; 

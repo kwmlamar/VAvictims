@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, AlertTriangle, ShieldAlert, Users } from 'lucide-react';
+import { Send, AlertTriangle, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/lib/supabaseClient';
@@ -113,7 +113,6 @@ const VaGroupAllegationForm = ({ onSubmit }) => {
         });
       }
     } catch (error) {
-      console.error("Error submitting VA Group allegation:", error);
       toast({
         title: "❌ Submission Failed",
         description: "Could not submit your VA Group allegation. Please try again. " + error.message,
@@ -130,7 +129,7 @@ const VaGroupAllegationForm = ({ onSubmit }) => {
     >
       <div className="flex items-center space-x-3 mb-6">
         <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-          <ShieldAlert className="h-5 w-5 text-red-400" />
+          <Shield className="h-5 w-5 text-red-400" />
         </div>
         <div>
           <h2 className="text-xl font-bold text-white">Submit VA Group Allegation</h2>

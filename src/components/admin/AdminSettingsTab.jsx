@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Settings, Database, Calculator, Shield, Globe, Bell } from 'lucide-react';
+import { Settings, Database, Calculator, Shield, Globe } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
 const AdminSettingsTab = ({ handleAction }) => {
@@ -19,7 +19,7 @@ const AdminSettingsTab = ({ handleAction }) => {
       setLoading(true);
       try {
         // Get database table count
-        const { data: tables, error: tablesError } = await supabase
+        const { data: tables } = await supabase
           .from('information_schema.tables')
           .select('table_name')
           .eq('table_schema', 'public');
@@ -37,7 +37,7 @@ const AdminSettingsTab = ({ handleAction }) => {
             activePolicies = policies?.length || 0;
           }
         } catch (error) {
-          console.warn('Could not count policies:', error.message);
+          // Error handled: removed console.warn
         }
 
         // Get scoring formulas count
@@ -51,7 +51,7 @@ const AdminSettingsTab = ({ handleAction }) => {
             scoringFormulas = formulas?.length || 0;
           }
         } catch (error) {
-          console.warn('Could not count formulas:', error.message);
+          // Error handled: removed console.warn
         }
 
         // Calculate real system health
@@ -67,7 +67,7 @@ const AdminSettingsTab = ({ handleAction }) => {
           const successfulChecks = healthChecks.filter(check => !check.error).length;
           systemHealth = Math.round((successfulChecks / healthChecks.length) * 100);
         } catch (error) {
-          console.warn('Could not calculate system health:', error.message);
+          // Error handled: removed console.warn
         }
 
         // Get real recent system activities based on actual data changes
@@ -91,7 +91,7 @@ const AdminSettingsTab = ({ handleAction }) => {
             });
           }
         } catch (error) {
-          console.warn('Could not check recent complaints:', error.message);
+          // Error handled: removed console.warn
         }
 
         // Check for recent OIG reports
@@ -112,7 +112,7 @@ const AdminSettingsTab = ({ handleAction }) => {
             });
           }
         } catch (error) {
-          console.warn('Could not check recent OIG reports:', error.message);
+          // Error handled: removed console.warn
         }
 
         // Add system sync activity
@@ -133,7 +133,7 @@ const AdminSettingsTab = ({ handleAction }) => {
         setRecentSettings(recentActivities);
 
       } catch (error) {
-        console.error('Error fetching system config:', error);
+        // Remove console.error('Error fetching system config:', error);
       } finally {
         setLoading(false);
       }

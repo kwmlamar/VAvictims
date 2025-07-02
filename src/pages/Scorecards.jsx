@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { BarChart3, TrendingDown, AlertTriangle, MapPin } from 'lucide-react';
@@ -19,20 +19,16 @@ const Scorecards = () => {
     const fetchScorecardData = async () => {
       setLoading(true);
       try {
-        console.log('🔍 Fetching scorecard data...');
-        
         // Check table accessibility first
         const tableStatus = await checkDatabaseTables();
         const accessibleTables = Object.keys(tableStatus).filter(table => tableStatus[table].accessible);
         
         if (accessibleTables.length === 0) {
-          console.warn('⚠️ No tables are accessible. Using default data.');
           setScorecardData(getDefaultScorecardData());
           return;
         }
 
         // Fetch national scorecard
-        console.log('📊 Fetching national scorecard...');
         let nationalData = getDefaultNationalData();
         if (tableStatus.scorecards?.accessible) {
           const { data: nationalScorecard, error } = await supabase
@@ -60,7 +56,6 @@ const Scorecards = () => {
         }
 
         // Fetch VISN scorecards
-        console.log('🏥 Fetching VISN scorecards...');
         let visnsData = [];
         if (tableStatus.scorecards?.accessible && tableStatus.visns?.accessible) {
           const { data: visnScorecards, error: visnError } = await supabase
@@ -95,7 +90,6 @@ const Scorecards = () => {
         }
 
         // Fetch facility scorecards
-        console.log('🏢 Fetching facility scorecards...');
         let facilitiesData = [];
         if (tableStatus.scorecards?.accessible && tableStatus.va_facilities?.accessible) {
           const { data: facilityScorecards, error: facilityScorecardError } = await supabase
@@ -173,11 +167,9 @@ const Scorecards = () => {
           }
         };
 
-        console.log('✅ Scorecard data fetched successfully:', result);
         setScorecardData(result);
         
       } catch (error) {
-        console.error("Error fetching scorecard data:", error);
         toast({
           title: "Error Fetching Scorecards",
           description: "Could not load scorecard data. " + error.message,
@@ -190,7 +182,7 @@ const Scorecards = () => {
     };
 
     fetchScorecardData();
-  }, [toast]);
+  }, [toast, getDefaultNationalData, getDefaultScorecardData]);
 
   // Helper functions for default data
   const getDefaultRepresentatives = () => [
@@ -198,31 +190,28 @@ const Scorecards = () => {
     { name: 'Senate VA Committee', role: 'Senate Oversight', score: 41.7, contactUrl: 'https://www.veterans.senate.gov/' }
   ];
 
-  const getDefaultNationalData = () => ({
+  const getDefaultNationalData = useCallback(() => ({
     score: 0,
     integrityScore: 0,
-    issues: ['Patient Safety Violations', 'Leadership Distrust', 'Retaliation Reports', 'Survey Compliance Issues'],
-    integrityIssues: ['Obstruction of Investigations', 'Withholding Evidence', 'Systemic Cover-ups'],
-    representatives: getDefaultRepresentatives(),
-    representativeScoreFormula: "Avg. Facility Scores (Jurisdiction) * 0.6 + Avg. VISN Integrity (Jurisdiction) * 0.4 - Penalties for unaddressed critical issues.",
-    formula: 'Average of lowest 50% VISNs + lowest VISN score ÷ 2',
-    explanation: 'Score reflects systemic issues across multiple VISNs with particular concern in patient safety and leadership accountability.',
-    integrityFormula: 'Base 100% - Sum of deductions for documented integrity violations (obstruction, retaliation, etc.)',
-    integrityExplanation: 'National integrity score reflects documented instances of obstruction, retaliation, cover-ups, and other integrity violations across VA operations.',
-    integritySources: [{ name: "OIG Report VA-2023-0117", url: "#" }, { name: "GAO Findings on VA Whistleblowers", url: "#" }],
-    entities: ['OIG', 'OGC', 'HR', 'VBA', 'OAWP', 'VACO']
-  });
+    totalFacilities: 0,
+    criticalFacilities: 0,
+    warningFacilities: 0,
+    totalComplaints: 0,
+    pendingCases: 0,
+    trends: {
+      score: 0,
+      integrityScore: 0,
+      complaints: 0,
+      resolution: 0
+    },
+    representatives: []
+  }), []);
 
-  const getDefaultScorecardData = () => ({
+  const getDefaultScorecardData = useCallback(() => ({
     national: getDefaultNationalData(),
     visns: [],
-    facilities: [],
-    summary: {
-      criticalFacilities: 0,
-      warningFacilities: 0,
-      totalFacilities: 0
-    }
-  });
+    facilities: []
+  }), [getDefaultNationalData]);
 
   const handleExportData = () => {
     toast({

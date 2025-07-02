@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { 
@@ -16,7 +16,7 @@ const VISNAnalysis = () => {
   const [visnData, setVisnData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const runAnalysis = async () => {
+  const runAnalysis = useCallback(async () => {
     setLoading(true);
     try {
       const result = await getVISNBreakdown();
@@ -37,7 +37,6 @@ const VISNAnalysis = () => {
         });
       }
     } catch (error) {
-      console.error('VISN analysis failed:', error);
       toast({
         title: "❌ Analysis Failed",
         description: error.message,
@@ -47,11 +46,11 @@ const VISNAnalysis = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     runAnalysis();
-  }, []);
+  }, [runAnalysis]);
 
   if (loading) {
     return (

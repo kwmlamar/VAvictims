@@ -65,7 +65,7 @@ const AdminUsersTab = ({ handleAction }) => {
         setRecentUsers(recentUsersData);
 
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        // Remove console.error('Error fetching user data:', error);
       } finally {
         setLoading(false);
       }

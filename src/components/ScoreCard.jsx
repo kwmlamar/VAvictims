@@ -10,8 +10,7 @@ import {
   Calculator, 
   Link as LinkIcon, 
   Scale, 
-  Briefcase, 
-  Award 
+  Briefcase
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 

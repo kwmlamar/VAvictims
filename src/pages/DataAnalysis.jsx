@@ -4,13 +4,9 @@ import { Helmet } from 'react-helmet-async';
 import { 
   TrendingUp, 
   TrendingDown, 
-  BarChart3, 
-  PieChart, 
-  Download,
-  Filter,
-  Calendar,
-  AlertTriangle,
-  Database
+  AlertTriangle, 
+  Database, 
+  Activity 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -22,7 +18,6 @@ const DataAnalysis = () => {
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('1year');
-  const [databaseAnalysis, setDatabaseAnalysis] = useState(null);
 
   useEffect(() => {
     const fetchAnalysisData = async () => {
@@ -30,7 +25,6 @@ const DataAnalysis = () => {
       try {
         // First, get database analysis to understand what data we have
         const dbAnalysis = await getAnalysisForDataAnalysisPage();
-        setDatabaseAnalysis(dbAnalysis);
 
         // Calculate date range based on timeRange
         const now = new Date();
@@ -147,7 +141,8 @@ const DataAnalysis = () => {
           }
         });
 
-        const topCategories = Object.entries(categoryCounts)
+        // Calculate top categories (unused but kept for future use)
+        Object.entries(categoryCounts)
           .sort(([,a], [,b]) => b - a)
           .slice(0, 4)
           .map(([category, count]) => ({
@@ -220,7 +215,8 @@ const DataAnalysis = () => {
 
         // Critical findings based on real data
         if (pendingComplaints > totalComplaints * 0.3) {
-          const increasePercent = Math.round((pendingComplaints / Math.max(totalComplaints - pendingComplaints, 1)) * 100);
+          // Calculate increase percent (unused but kept for future use)
+        Math.round((pendingComplaints / Math.max(totalComplaints - pendingComplaints, 1)) * 100);
           criticalFindings.push(`Patient safety violations represent ${Math.round((pendingComplaints / totalComplaints) * 100)}% of total complaints`);
         }
 
@@ -273,7 +269,6 @@ const DataAnalysis = () => {
         });
 
       } catch (error) {
-        console.error("Error fetching analysis data:", error);
         toast({
           title: "Error Fetching Analysis",
           description: "Could not load data analysis. " + error.message,
@@ -325,7 +320,6 @@ const DataAnalysis = () => {
         duration: 3000,
       });
     } catch (error) {
-      console.error("Export error:", error);
       toast({
         title: "❌ Export Failed",
         description: "Could not export analysis data. " + error.message,
@@ -412,7 +406,7 @@ const DataAnalysis = () => {
               onClick={handleExportAnalysis}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Activity className="h-4 w-4 mr-2" />
               Export
             </Button>
           </div>
