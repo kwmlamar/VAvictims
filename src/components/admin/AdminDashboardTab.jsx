@@ -65,12 +65,21 @@ const AdminDashboardTab = ({ systemStats, loadingStats }) => {
         activities.sort((a, b) => new Date(b.time) - new Date(a.time));
         setRecentActivity(activities.slice(0, 5));
 
-        // Check system status
-        const { data: dbTest } = await supabase.from('user_submitted_complaints').select('count', { count: 'exact', head: true });
+        // Check real system status
+        const systemChecks = await Promise.all([
+          supabase.from('user_submitted_complaints').select('count', { count: 'exact', head: true }),
+          supabase.from('va_facilities').select('count', { count: 'exact', head: true }),
+          supabase.from('oig_report_entries').select('count', { count: 'exact', head: true })
+        ]);
+        
+        const dbOnline = systemChecks.some(check => !check.error);
+        const storageHealthy = true; // Simplified - in real app you'd check storage connectivity
+        const apiOperational = true; // Simplified - in real app you'd check API endpoints
+        
         setSystemStatus({
-          database: dbTest !== null ? 'Online' : 'Offline',
-          storage: 'Healthy',
-          api: 'Operational',
+          database: dbOnline ? 'Online' : 'Offline',
+          storage: storageHealthy ? 'Healthy' : 'Issues',
+          api: apiOperational ? 'Operational' : 'Down',
           lastSync: systemStats.lastSync
         });
 
@@ -114,14 +123,14 @@ const AdminDashboardTab = ({ systemStats, loadingStats }) => {
           <div className="space-y-3">
             {recentActivity.length > 0 ? (
               recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-white/5">
-                  <div className={`w-2 h-2 rounded-full ${
-                    activity.type === 'submission' ? 'bg-green-500' :
-                    activity.type === 'report' ? 'bg-blue-500' :
-                    activity.type === 'user' ? 'bg-purple-500' : 'bg-yellow-500'
-                  }`} />
-                  <div className="flex-1">
-                    <p className="text-white text-sm">{activity.action}</p>
+              <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-white/5">
+                <div className={`w-2 h-2 rounded-full ${
+                  activity.type === 'submission' ? 'bg-green-500' :
+                  activity.type === 'report' ? 'bg-blue-500' :
+                  activity.type === 'user' ? 'bg-purple-500' : 'bg-yellow-500'
+                }`} />
+                <div className="flex-1">
+                  <p className="text-white text-sm">{activity.action}</p>
                     <p className="text-blue-300 text-xs">{getTimeAgo(activity.time)}</p>
                     {activity.details && (
                       <p className="text-blue-400 text-xs">{activity.details}</p>

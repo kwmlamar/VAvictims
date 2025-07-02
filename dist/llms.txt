@@ -7,3 +7,4 @@
 - [Scorecards - VA Accountability Platform](/scorecards): Comprehensive scorecards for VA facilities, VISNs, and national performance with detailed metrics and accountability tracking.
 - [Scoring Methodology - VA Accountability Platform](/calculations): Explanation of the grading and formula used for scoring VA facilities, VISNs, and national performance.
 - [User Portal - VA Accountability Platform](/userportal): Submit allegations, upload evidence, and track your submissions in the VA accountability platform.
+- [VISN Analysis - VA Accountability Platform](/visnanalysis): Analysis of VISN data and facility distribution.

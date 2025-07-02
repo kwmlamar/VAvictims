@@ -95,13 +95,13 @@ const AdminUsersTab = ({ handleAction }) => {
     >
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-white">User Management</h2>
-        <Button 
-          onClick={() => handleAction('user-management')}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Users className="h-4 w-4 mr-2" />
-          Manage Users
-        </Button>
+      <Button 
+        onClick={() => handleAction('user-management')}
+        className="bg-blue-600 hover:bg-blue-700"
+      >
+        <Users className="h-4 w-4 mr-2" />
+        Manage Users
+      </Button>
       </div>
 
       {loading ? (

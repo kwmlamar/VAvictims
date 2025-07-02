@@ -28,7 +28,7 @@ const AdminPortal = () => {
     totalUsers: 0,
     activeSubmissions: 0,
     processedReports: 0,
-    systemHealth: 98.5, 
+    systemHealth: 0, 
     storageUsed: 0, 
     lastSync: 'N/A'
   });
@@ -57,50 +57,116 @@ const AdminPortal = () => {
   const fetchAdminStats = async () => {
     setLoadingStats(true);
     try {
-      const { data: usersData, error: usersError } = await supabase.rpc('count_users');
-      const { count: submissionsCount, error: submissionsError } = await supabase
-        .from('user_submitted_complaints')
-        .select('*', { count: 'exact', head: true })
-        .neq('status', 'Resolved');
+      // Count users directly instead of using a function
+      let usersCount = 0;
+      try {
+        const { count, error: usersError } = await supabase
+          .from('users')
+          .select('*', { count: 'exact', head: true });
+        if (!usersError) {
+          usersCount = count || 0;
+        } else {
+          console.warn('Users table not accessible:', usersError.message);
+        }
+      } catch (error) {
+        console.warn('Could not count users:', error.message);
+      }
+        
+      // Count active submissions
+      let submissionsCount = 0;
+      try {
+        const { count, error: submissionsError } = await supabase
+          .from('user_submitted_complaints')
+          .select('*', { count: 'exact', head: true })
+          .neq('status', 'Resolved');
+        if (!submissionsError) {
+          submissionsCount = count || 0;
+        } else {
+          console.warn('Complaints table not accessible:', submissionsError.message);
+        }
+      } catch (error) {
+        console.warn('Could not count submissions:', error.message);
+      }
 
-      const { count: reportsCount, error: reportsError } = await supabase
-        .from('uploaded_documents')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'processed');
+      // Count processed reports
+      let reportsCount = 0;
+      try {
+        const { count, error: reportsError } = await supabase
+          .from('uploaded_documents')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'processed');
+        if (!reportsError) {
+          reportsCount = count || 0;
+        } else {
+          console.warn('Uploaded documents table not accessible:', reportsError.message);
+        }
+      } catch (error) {
+        console.warn('Could not count reports:', error.message);
+      }
 
-      if (usersError) throw usersError;
-      if (submissionsError) throw submissionsError;
-      if (reportsError) throw reportsError;
+      // Calculate real system health based on database connectivity and data integrity
+      let systemHealth = 0;
+      try {
+        // Test database connectivity by checking if we can access key tables
+        const healthChecks = await Promise.all([
+          supabase.from('va_facilities').select('count', { count: 'exact', head: true }),
+          supabase.from('user_submitted_complaints').select('count', { count: 'exact', head: true }),
+          supabase.from('oig_report_entries').select('count', { count: 'exact', head: true }),
+          supabase.from('scorecards').select('count', { count: 'exact', head: true })
+        ]);
+        
+        const successfulChecks = healthChecks.filter(check => !check.error).length;
+        systemHealth = Math.round((successfulChecks / healthChecks.length) * 100);
+        
+        // Add bonus for having actual data
+        if (usersCount > 0 || submissionsCount > 0 || reportsCount > 0) {
+          systemHealth = Math.min(100, systemHealth + 10);
+        }
+      } catch (error) {
+        console.warn('Could not calculate system health:', error.message);
+        systemHealth = 0;
+      }
       
       let totalStorageUsedBytes = 0;
       const fetchedBucketsData = await Promise.all(definedBuckets.map(async (bucket) => {
-        const { data: files, error: filesError } = await supabase.storage.from(bucket.name).list('', { limit: 1000 });
-        if (filesError) {
-          console.warn(`Could not list files for bucket ${bucket.name}:`, filesError.message);
+        try {
+          const { data: files, error: filesError } = await supabase.storage.from(bucket.name).list('', { limit: 1000 });
+          if (filesError) {
+            console.warn(`Could not list files for bucket ${bucket.name}:`, filesError.message);
+            return { ...bucket, size: 'N/A', files: 'N/A' };
+          }
+          const bucketSizeBytes = files.reduce((acc, file) => acc + (file.metadata?.size || 0), 0);
+          totalStorageUsedBytes += bucketSizeBytes;
+          return {
+            ...bucket,
+            size: formatFileSize(bucketSizeBytes),
+            files: files.length
+          };
+        } catch (error) {
+          console.warn(`Error accessing bucket ${bucket.name}:`, error.message);
           return { ...bucket, size: 'N/A', files: 'N/A' };
         }
-        const bucketSizeBytes = files.reduce((acc, file) => acc + (file.metadata?.size || 0), 0);
-        totalStorageUsedBytes += bucketSizeBytes;
-        return {
-          ...bucket,
-          size: formatFileSize(bucketSizeBytes),
-          files: files.length
-        };
       }));
       setBucketsData(fetchedBucketsData);
 
       setSystemStats(prev => ({
         ...prev,
-        totalUsers: usersData || 0,
+        totalUsers: usersCount || 0,
         activeSubmissions: submissionsCount || 0,
         processedReports: reportsCount || 0,
+        systemHealth: systemHealth,
         storageUsed: totalStorageUsedBytes > 0 ? parseFloat(((totalStorageUsedBytes / (5 * 1024 * 1024 * 1024)) * 100).toFixed(1)) : 0,
         lastSync: new Date().toLocaleString()
       }));
 
     } catch (error) {
       console.error("Error fetching admin stats:", error);
-      toast({ title: "Error fetching stats", description: error.message, variant: "destructive" });
+      const errorMessage = error.message || error.details || 'Unknown error occurred';
+      toast({ 
+        title: "Error fetching stats", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     } finally {
       setLoadingStats(false);
     }

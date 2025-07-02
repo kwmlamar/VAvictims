@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Code, Database, Server, Folder, Layers, Download, ExternalLink } from 'lucide-react';
+import { Database, Server, Folder, Layers, Download } from 'lucide-react';
 import DeveloperInfoCard from '@/components/developer/DeveloperInfoCard';
 
 const DeveloperDashboard = () => {
@@ -90,8 +90,8 @@ const DeveloperDashboard = () => {
               How to Export:
             </p>
             <ol className="list-decimal list-inside mt-2 text-blue-200 space-y-1">
-              <li>Click the 'Hostinger Horizons' dropdown menu at the top-left of your screen.</li>
-              <li>Select the 'Export Project' button.</li>
+              <li>Click the &apos;Hostinger Horizons&apos; dropdown menu at the top-left of your screen.</li>
+              <li>Select the &apos;Export Project&apos; button.</li>
               <li>A .zip file containing the entire project will be downloaded to your computer.</li>
             </ol>
           </div>

@@ -12,8 +12,9 @@ const FacilitySearch = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
-    visn: '',
+    facilityName: '',
     state: '',
+    visn: '',
     facilityType: '',
     scoreRange: [0, 100]
   });
@@ -25,6 +26,7 @@ const FacilitySearch = () => {
     try {
       const { data, error } = await supabase.rpc('search_facilities', {
         search_term: searchTerm,
+        facility_name_filter: filters.facilityName,
         visn_filter: filters.visn,
         state_filter: filters.state,
         type_filter: filters.facilityType,

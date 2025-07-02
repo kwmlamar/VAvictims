@@ -289,7 +289,7 @@ const ScoreCard = ({
                       Formula: {representativeScoreFormula}
                     </p>
                     <p className="text-blue-200 text-xs mb-3">
-                      This score reflects the representative's effectiveness in overseeing VA facilities within their jurisdiction based on available data.
+                      This score reflects the representative&apos;s effectiveness in overseeing VA facilities within their jurisdiction based on available data.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {representatives.map((rep, index) => (

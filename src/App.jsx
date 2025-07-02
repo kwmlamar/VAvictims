@@ -9,6 +9,8 @@ import Scorecards from '@/pages/Scorecards';
 import UserPortal from '@/pages/UserPortal';
 import AdminPortal from '@/pages/AdminPortal';
 import DataAnalysis from '@/pages/DataAnalysis';
+
+import VISNAnalysis from '@/pages/VISNAnalysis';
 import DeveloperPortal from '@/pages/DeveloperPortal';
 import About from '@/pages/About';
 import Calculations from '@/pages/Calculations';
@@ -36,6 +38,8 @@ function App() {
                 <Route path="/portal" element={<UserPortal />} />
                 <Route path="/admin" element={<AdminPortal />} />
                 <Route path="/analysis" element={<DataAnalysis />} />
+
+                <Route path="/visn-analysis" element={<VISNAnalysis />} />
               </Routes>
             </Layout>
           } />

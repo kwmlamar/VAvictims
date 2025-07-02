@@ -16,16 +16,16 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import ScoreCard from '@/components/ScoreCard';
 import MetricCard from '@/components/MetricCard';
-import DatabaseSeeder from '@/components/DatabaseSeeder';
 import { fetchNationalDashboardData } from '@/lib/databaseUtils';
-import { quickTest, comprehensiveTest } from '@/lib/testDatabase';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
 
 const Dashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [nationalData, setNationalData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [recentActivity, setRecentActivity] = useState([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -79,8 +79,98 @@ const Dashboard = () => {
       }
     };
 
+    const fetchRecentActivity = async () => {
+      try {
+        // Calculate date 30 days ago for "recent" filter
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        // Fetch recent complaints (last 30 days)
+        const { data: recentComplaints } = await supabase
+          .from('user_submitted_complaints')
+          .select('*')
+          .gte('submitted_at', thirtyDaysAgo.toISOString())
+          .order('submitted_at', { ascending: false })
+          .limit(3);
+
+        // Fetch recent OIG reports (last 30 days)
+        const { data: recentOIGReports } = await supabase
+          .from('oig_report_entries')
+          .select('*')
+          .gte('report_date', thirtyDaysAgo.toISOString().split('T')[0])
+          .order('report_date', { ascending: false })
+          .limit(2);
+
+        // Fetch recent score changes (last 30 days)
+        const { data: recentScorecards } = await supabase
+          .from('scorecards')
+          .select('*')
+          .eq('entity_type', 'facility')
+          .gte('updated_at', thirtyDaysAgo.toISOString())
+          .order('updated_at', { ascending: false })
+          .limit(2);
+
+        // Combine and format activities
+        const activities = [];
+        
+        if (recentComplaints) {
+          recentComplaints.forEach(complaint => {
+            activities.push({
+              type: 'complaint',
+              message: `New ${complaint.complaint_type || 'complaint'} submitted for ${complaint.facility_name_submitted || 'Unknown facility'}`,
+              time: new Date(complaint.submitted_at).toLocaleString(),
+              timestamp: complaint.submitted_at
+            });
+          });
+        }
+
+        if (recentOIGReports) {
+          recentOIGReports.forEach(report => {
+            activities.push({
+              type: 'report',
+              message: `OIG report published for ${report.facility_name || 'Unknown facility'}`,
+              time: new Date(report.report_date).toLocaleString(),
+              timestamp: report.report_date
+            });
+          });
+        }
+
+        if (recentScorecards) {
+          recentScorecards.forEach(scorecard => {
+            activities.push({
+              type: 'update',
+              message: `Score updated for facility (${scorecard.score.toFixed(1)}%)`,
+              time: new Date(scorecard.updated_at).toLocaleString(),
+              timestamp: scorecard.updated_at
+            });
+          });
+        }
+
+        // Sort by timestamp and take most recent 4
+        activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        setRecentActivity(activities.slice(0, 4));
+
+      } catch (error) {
+        console.error('Error fetching recent activity:', error);
+        // Fallback to empty array
+        setRecentActivity([]);
+      }
+    };
+
     fetchDashboardData();
+    fetchRecentActivity();
   }, [toast]);
+
+  const getTimeAgo = (timestamp) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInMinutes = Math.floor((now - time) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`;
+    return `${Math.floor(diffInMinutes / 1440)} days ago`;
+  };
 
   const handleQuickAction = (path) => {
     if (path === 'analysis' || path === 'scorecards' || path === 'submit') {
@@ -167,7 +257,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
             title="National Score"
-            value={`${nationalData.nationalScore}%`}
+            value={`${nationalData.nationalScore.toFixed(1)}%`}
             trend={nationalData.trends.score}
             icon={Shield}
             color={nationalData.nationalScore < 20 ? 'critical' : nationalData.nationalScore < 50 ? 'warning' : 'good'}
@@ -302,63 +392,30 @@ const Dashboard = () => {
         >
           <h2 className="text-xl font-bold text-white mb-6">Recent Activity</h2>
           <div className="space-y-4">
-            {[
-              { type: 'alert', message: 'Phoenix VA Medical Center score dropped to 18%', time: '2 hours ago' },
-              { type: 'report', message: 'New OIG report published for VISN 12', time: '4 hours ago' },
-              { type: 'complaint', message: '47 new complaints submitted today', time: '6 hours ago' },
-              { type: 'update', message: 'Seattle VA improved score to 67%', time: '1 day ago' }
-            ].map((activity, index) => (
-              <div key={index} className="flex items-center space-x-4 p-3 rounded-lg bg-white/5">
-                <div className={`w-2 h-2 rounded-full ${
-                  activity.type === 'alert' ? 'bg-red-500' :
-                  activity.type === 'report' ? 'bg-blue-500' :
-                  activity.type === 'complaint' ? 'bg-yellow-500' : 'bg-green-500'
-                }`} />
-                <div className="flex-1">
-                  <p className="text-white text-sm">{activity.message}</p>
-                  <p className="text-blue-300 text-xs">{activity.time}</p>
+            {recentActivity.length > 0 ? (
+              recentActivity.map((activity, index) => (
+                <div key={index} className="flex items-center space-x-4 p-3 rounded-lg bg-white/5">
+                  <div className={`w-2 h-2 rounded-full ${
+                    activity.type === 'alert' ? 'bg-red-500' :
+                    activity.type === 'report' ? 'bg-blue-500' :
+                    activity.type === 'complaint' ? 'bg-yellow-500' : 'bg-green-500'
+                  }`} />
+                  <div className="flex-1">
+                    <p className="text-white text-sm">{activity.message}</p>
+                    <p className="text-blue-300 text-xs">{getTimeAgo(activity.timestamp)}</p>
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-blue-200 text-sm">No recent activity</p>
+                <p className="text-blue-300 text-xs mt-1">Activity will appear here as complaints and reports are submitted</p>
               </div>
-            ))}
+            )}
           </div>
         </motion.div>
 
-        {/* Development Tools - Remove in production */}
-        {process.env.NODE_ENV === 'development' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="space-y-4"
-          >
-            <DatabaseSeeder />
-            
-            <div className="ios-card p-6 space-y-4">
-              <h3 className="text-lg font-semibold text-white">Database Testing</h3>
-              <p className="text-blue-200 text-sm">
-                Test the database connection and see current data counts.
-              </p>
-              <div className="flex space-x-4">
-                <Button
-                  onClick={quickTest}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  Quick Test
-                </Button>
-                <Button
-                  onClick={comprehensiveTest}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  Comprehensive Test
-                </Button>
-              </div>
-              <div className="text-xs text-blue-300">
-                <p>Check the browser console for test results.</p>
-                <p>You can also run <code className="bg-black/20 px-1 rounded">window.comprehensiveTest()</code> in the console.</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
+
       </div>
     </>
   );

@@ -79,14 +79,15 @@ const SearchFilters = ({ filters, onFilterChange }) => {
 
   const clearFilters = () => {
     onFilterChange({
-      visn: '',
+      facilityName: '',
       state: '',
+      visn: '',
       facilityType: '',
       scoreRange: [0, 100]
     });
   };
 
-  const hasActiveFilters = filters.visn || filters.state || filters.facilityType || 
+  const hasActiveFilters = filters.facilityName || filters.visn || filters.state || filters.facilityType || 
     filters.scoreRange[0] > 0 || filters.scoreRange[1] < 100;
 
   return (
@@ -114,25 +115,16 @@ const SearchFilters = ({ filters, onFilterChange }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* VISN Filter */}
+        {/* Facility Name Filter */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-blue-200">VISN</label>
-          <Select value={filters.visn} onValueChange={(value) => handleFilterUpdate('visn', value)}>
-            <SelectTrigger className="search-input text-white">
-              <SelectValue placeholder="Select VISN" />
-            </SelectTrigger>
-            <SelectContent className="bg-slate-800 border-slate-700">
-              {loading ? (
-                <SelectItem value="loading" disabled>Loading...</SelectItem>
-              ) : (
-                visns.map((visn) => (
-                  <SelectItem key={visn} value={visn} className="text-white hover:bg-slate-700">
-                    {visn}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+          <label className="text-sm font-medium text-blue-200">Facility Name</label>
+          <input
+            type="text"
+            placeholder="Enter facility name..."
+            value={filters.facilityName || ''}
+            onChange={(e) => handleFilterUpdate('facilityName', e.target.value)}
+            className="w-full px-4 py-2 search-input text-white placeholder-blue-300 focus:outline-none"
+          />
         </div>
 
         {/* State Filter */}
@@ -156,20 +148,20 @@ const SearchFilters = ({ filters, onFilterChange }) => {
           </Select>
         </div>
 
-        {/* Facility Type Filter */}
+        {/* VISN Filter */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-blue-200">Facility Type</label>
-          <Select value={filters.facilityType} onValueChange={(value) => handleFilterUpdate('facilityType', value)}>
+          <label className="text-sm font-medium text-blue-200">VISN</label>
+          <Select value={filters.visn} onValueChange={(value) => handleFilterUpdate('visn', value)}>
             <SelectTrigger className="search-input text-white">
-              <SelectValue placeholder="Select Type" />
+              <SelectValue placeholder="Select VISN" />
             </SelectTrigger>
             <SelectContent className="bg-slate-800 border-slate-700">
               {loading ? (
                 <SelectItem value="loading" disabled>Loading...</SelectItem>
               ) : (
-                facilityTypes.map((type) => (
-                  <SelectItem key={type} value={type} className="text-white hover:bg-slate-700">
-                    {type}
+                visns.map((visn) => (
+                  <SelectItem key={visn} value={visn} className="text-white hover:bg-slate-700">
+                    {visn}
                   </SelectItem>
                 ))
               )}
@@ -192,6 +184,30 @@ const SearchFilters = ({ filters, onFilterChange }) => {
               className="w-full"
             />
           </div>
+        </div>
+      </div>
+
+      {/* Additional Filters Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        {/* Facility Type Filter */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-blue-200">Facility Type</label>
+          <Select value={filters.facilityType} onValueChange={(value) => handleFilterUpdate('facilityType', value)}>
+            <SelectTrigger className="search-input text-white">
+              <SelectValue placeholder="Select Type" />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-800 border-slate-700">
+              {loading ? (
+                <SelectItem value="loading" disabled>Loading...</SelectItem>
+              ) : (
+                facilityTypes.map((type) => (
+                  <SelectItem key={type} value={type} className="text-white hover:bg-slate-700">
+                    {type}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </motion.div>
