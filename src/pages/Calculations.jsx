@@ -1,7 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Sigma } from 'lucide-react';
+import { AlertTriangle, Sigma, CheckCircle } from 'lucide-react';
 
 const Calculations = () => {
   return (

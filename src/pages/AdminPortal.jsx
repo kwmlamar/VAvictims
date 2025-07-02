@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { 
@@ -8,6 +8,7 @@ import {
   FileText, 
   BarChart3, 
   Shield,
+  Upload,
   Download,
   RefreshCw
 } from 'lucide-react';
@@ -34,12 +35,16 @@ const AdminPortal = () => {
   const [bucketsData, setBucketsData] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  const definedBuckets = useMemo(() => [
-    { name: 'complaint_pdfs', description: 'Complaint PDF files' },
-    { name: 'evidence_files', description: 'Evidence and supporting documents' },
-    { name: 'oig_reports', description: 'OIG report documents' },
-    { name: 'user_uploads', description: 'General user uploads' }
-  ], []);
+  const definedBuckets = [
+    { name: 'complaint_pdfs', description: 'Stores PDFs uploaded by users/admins related to complaints or cases', access: 'Authenticated users (upload), Admin (read/write)' },
+    { name: 'oig_reports', description: 'Stores full OIG reports and investigation findings', access: 'Public (read), Admin (write)' },
+    { name: 'chip_reports', description: 'Stores CHIP reports for VA facilities', access: 'Public (read), Admin (write)' },
+    { name: 'afge_surveys', description: 'Stores AFGE survey documents and results', access: 'Public (read), Admin (write)' },
+    { name: 'nnu_surveys', description: 'Stores NNU survey documents and results', access: 'Public (read), Admin (write)' },
+    { name: 'media_files', description: 'Stores news articles, social media content, and other media', access: 'Public (read), Admin (write)' },
+    { name: 'scraped_content', description: 'Stores scraped web content (HTML, text, links) for analysis', access: 'Admin (read/write)' },
+    { name: 'legal_documents', description: 'Stores AI-generated legal documents for users', access: 'Authenticated users (read own), Admin (read/write)' },
+  ];
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
@@ -49,58 +54,57 @@ const AdminPortal = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const fetchAdminStats = useCallback(async () => {
+  const fetchAdminStats = async () => {
     setLoadingStats(true);
     try {
-      // Get user count
+      // Count users directly instead of using a function
       let usersCount = 0;
       try {
         const { count, error: usersError } = await supabase
           .from('users')
           .select('*', { count: 'exact', head: true });
-        
-        if (usersError) {
-          // Error handled silently
-        } else {
+        if (!usersError) {
           usersCount = count || 0;
+        } else {
+          console.warn('Users table not accessible:', usersError.message);
         }
       } catch (error) {
-        // Error handled silently
+        console.warn('Could not count users:', error.message);
       }
-
-      // Get submissions count
+        
+      // Count active submissions
       let submissionsCount = 0;
       try {
         const { count, error: submissionsError } = await supabase
           .from('user_submitted_complaints')
-          .select('*', { count: 'exact', head: true });
-        
-        if (submissionsError) {
-          // Error handled silently
-        } else {
+          .select('*', { count: 'exact', head: true })
+          .neq('status', 'Resolved');
+        if (!submissionsError) {
           submissionsCount = count || 0;
+        } else {
+          console.warn('Complaints table not accessible:', submissionsError.message);
         }
       } catch (error) {
-        // Error handled silently
+        console.warn('Could not count submissions:', error.message);
       }
 
-      // Get reports count
+      // Count processed reports
       let reportsCount = 0;
       try {
         const { count, error: reportsError } = await supabase
           .from('uploaded_documents')
-          .select('*', { count: 'exact', head: true });
-        
-        if (reportsError) {
-          // Error handled silently
-        } else {
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'processed');
+        if (!reportsError) {
           reportsCount = count || 0;
+        } else {
+          console.warn('Uploaded documents table not accessible:', reportsError.message);
         }
       } catch (error) {
-        // Error handled silently
+        console.warn('Could not count reports:', error.message);
       }
 
-      // Calculate system health
+      // Calculate real system health based on database connectivity and data integrity
       let systemHealth = 0;
       try {
         // Test database connectivity by checking if we can access key tables
@@ -119,7 +123,7 @@ const AdminPortal = () => {
           systemHealth = Math.min(100, systemHealth + 10);
         }
       } catch (error) {
-        // Error handled silently
+        console.warn('Could not calculate system health:', error.message);
         systemHealth = 0;
       }
       
@@ -128,6 +132,7 @@ const AdminPortal = () => {
         try {
           const { data: files, error: filesError } = await supabase.storage.from(bucket.name).list('', { limit: 1000 });
           if (filesError) {
+            console.warn(`Could not list files for bucket ${bucket.name}:`, filesError.message);
             return { ...bucket, size: 'N/A', files: 'N/A' };
           }
           const bucketSizeBytes = files.reduce((acc, file) => acc + (file.metadata?.size || 0), 0);
@@ -138,9 +143,11 @@ const AdminPortal = () => {
             files: files.length
           };
         } catch (error) {
+          console.warn(`Error accessing bucket ${bucket.name}:`, error.message);
           return { ...bucket, size: 'N/A', files: 'N/A' };
         }
       }));
+      setBucketsData(fetchedBucketsData);
 
       setSystemStats(prev => ({
         ...prev,
@@ -152,17 +159,22 @@ const AdminPortal = () => {
         lastSync: new Date().toLocaleString()
       }));
 
-      setBucketsData(fetchedBucketsData);
     } catch (error) {
-      // Error handled silently
+      console.error("Error fetching admin stats:", error);
+      const errorMessage = error.message || error.details || 'Unknown error occurred';
+      toast({ 
+        title: "Error fetching stats", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     } finally {
       setLoadingStats(false);
     }
-  }, [definedBuckets]);
+  };
   
   useEffect(() => {
     fetchAdminStats();
-  }, [fetchAdminStats]);
+  }, []);
 
 
   const handleAction = (action) => {

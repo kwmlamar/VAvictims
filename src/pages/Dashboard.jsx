@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { 
+  TrendingDown, 
   TrendingUp, 
   AlertTriangle, 
   Shield, 
-  MapPin,
+  Users, 
   FileText,
   BarChart3,
+  MapPin,
   Scale
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,6 +44,8 @@ const Dashboard = () => {
           });
         }
       } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        
         // Check if it's a database connection issue
         if (error.message.includes('Failed to fetch some data from database')) {
           toast({
@@ -147,6 +151,7 @@ const Dashboard = () => {
         setRecentActivity(activities.slice(0, 4));
 
       } catch (error) {
+        console.error('Error fetching recent activity:', error);
         // Fallback to empty array
         setRecentActivity([]);
       }

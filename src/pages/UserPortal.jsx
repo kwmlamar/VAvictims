@@ -9,6 +9,7 @@ import {
   ShieldAlert,
   CheckCircle,
   Clock,
+  Users,
   Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import VaGroupAllegationForm from '@/components/VaGroupAllegationForm';
 import ExternalGroupAllegationForm from '@/components/ExternalGroupAllegationForm';
 import EvidenceUpload from '@/components/EvidenceUpload';
 import { supabase } from '@/lib/supabaseClient';
+import { checkDatabaseTables } from '@/lib/databaseUtils';
 
 const UserPortal = () => {
   const { toast } = useToast();
@@ -29,6 +31,16 @@ const UserPortal = () => {
   const fetchSubmissions = async () => {
     setLoadingSubmissions(true);
     try {
+      console.log('🔍 Fetching user submissions...');
+      
+      // Check table accessibility first
+      const tableStatus = await checkDatabaseTables();
+      if (!tableStatus.user_submitted_complaints?.accessible) {
+        console.warn('⚠️ user_submitted_complaints table not accessible');
+        setSubmissions([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('user_submitted_complaints')
         .select(`
@@ -48,8 +60,11 @@ const UserPortal = () => {
         .order('submitted_at', { ascending: false });
 
       if (error) {
+        console.error('❌ Error fetching submissions:', error);
         throw error;
       }
+      
+      console.log('✅ Fetched submissions:', data?.length || 0);
       
       const formattedSubmissions = (data || []).map(s => ({
         id: s.id,
@@ -74,6 +89,7 @@ const UserPortal = () => {
       setSubmissions(formattedSubmissions);
 
     } catch (error) {
+      console.error("Error fetching submissions:", error);
       toast({ 
         title: "Error Fetching Submissions", 
         description: "Could not load your submissions. Please try again later.", 
@@ -94,6 +110,15 @@ const UserPortal = () => {
 
   const handleAllegationSubmit = async (formData) => {
     try {
+      console.log('📝 Submitting allegation:', formData);
+      
+      // Check table accessibility
+      const tableStatus = await checkDatabaseTables();
+      if (!tableStatus.user_submitted_complaints?.accessible) {
+        throw new Error('Database table not accessible');
+      }
+
+      // Prepare data for database insertion
       const submissionData = {
         facility_name_submitted: formData.facility,
         complaint_type: formData.type,
@@ -115,6 +140,7 @@ const UserPortal = () => {
         user_id: null
       };
 
+      // Insert into database
       const { data, error } = await supabase
         .from('user_submitted_complaints')
         .insert([submissionData])
@@ -122,9 +148,13 @@ const UserPortal = () => {
         .single();
 
       if (error) {
+        console.error('❌ Error inserting submission:', error);
         throw error;
       }
 
+      console.log('✅ Submission inserted successfully:', data);
+
+      // Create submission object for UI
       const newSubmission = {
         id: data.id,
         title: formData.external_group 
@@ -145,6 +175,7 @@ const UserPortal = () => {
         is_anonymous: formData.isAnonymous || false
       };
       
+      // Update local state
       setSubmissions([newSubmission, ...submissions]);
       
       toast({
@@ -154,6 +185,7 @@ const UserPortal = () => {
       });
 
     } catch (error) {
+      console.error('❌ Error submitting allegation:', error);
       toast({
         title: "❌ Submission Failed",
         description: "Could not submit your allegation. Please try again or contact support if the problem persists.",
@@ -165,6 +197,15 @@ const UserPortal = () => {
 
   const handleFileUpload = async (uploadedFileRecords) => {
     try {
+      console.log('📁 Processing file uploads:', uploadedFileRecords);
+      
+      // Check table accessibility
+      const tableStatus = await checkDatabaseTables();
+      if (!tableStatus.uploaded_documents?.accessible) {
+        throw new Error('Upload documents table not accessible');
+      }
+
+      // Process each uploaded file
       const uploadPromises = uploadedFileRecords.map(async (fileRecord) => {
         const { data, error } = await supabase
           .from('uploaded_documents')
@@ -180,6 +221,7 @@ const UserPortal = () => {
           .single();
 
         if (error) {
+          console.error('❌ Error uploading file:', error);
           throw error;
         }
 
@@ -195,6 +237,7 @@ const UserPortal = () => {
       });
 
     } catch (error) {
+      console.error('❌ Error processing file uploads:', error);
       toast({
         title: "❌ File Upload Failed",
         description: "Could not process file uploads. Please try again.",

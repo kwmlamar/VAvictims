@@ -2,6 +2,8 @@ import { supabase } from './supabaseClient';
 
 // Comprehensive database analysis
 export const analyzeDatabaseData = async () => {
+  console.log('🔍 Starting comprehensive database analysis...');
+  
   const analysis = {
     tables: {},
     dataCounts: {},
@@ -12,36 +14,36 @@ export const analyzeDatabaseData = async () => {
 
   try {
     // 1. Check table accessibility and basic counts
+    console.log('📊 Checking table accessibility...');
     const tables = [
       'visns',
-      'va_facilities',
-      'user_submitted_complaints',
-      'oig_report_entries',
+      'va_facilities', 
       'scorecards',
-      'analytics',
-      'congressional_representatives'
+      'user_submitted_complaints',
+      'oig_report_entries'
     ];
 
     for (const table of tables) {
       try {
-        const { error } = await supabase
+        const { data, count, error } = await supabase
           .from(table)
-          .select('*')
-          .limit(1);
-
-        analysis.tables[table] = {
-          accessible: !error,
-          error: error?.message || null
-        };
-      } catch (err) {
-        analysis.tables[table] = {
-          accessible: false,
-          error: err.message
-        };
+          .select('*', { count: 'exact', head: true });
+        
+        if (error) {
+          analysis.tables[table] = { accessible: false, error: error.message };
+          analysis.issues.push(`Table ${table}: ${error.message}`);
+        } else {
+          analysis.tables[table] = { accessible: true, count: count || 0 };
+          analysis.dataCounts[table] = count || 0;
+        }
+      } catch (error) {
+        analysis.tables[table] = { accessible: false, error: error.message };
+        analysis.issues.push(`Table ${table}: ${error.message}`);
       }
     }
 
     // 2. Analyze facility data
+    console.log('🏥 Analyzing facility data...');
     if (analysis.tables.va_facilities?.accessible) {
       const { data: facilities, error } = await supabase
         .from('va_facilities')
@@ -62,6 +64,7 @@ export const analyzeDatabaseData = async () => {
     }
 
     // 3. Analyze complaint data
+    console.log('📝 Analyzing complaint data...');
     if (analysis.tables.user_submitted_complaints?.accessible) {
       const { data: complaints, error } = await supabase
         .from('user_submitted_complaints')
@@ -101,6 +104,7 @@ export const analyzeDatabaseData = async () => {
     }
 
     // 4. Analyze OIG report data
+    console.log('📋 Analyzing OIG report data...');
     if (analysis.tables.oig_report_entries?.accessible) {
       const { data: oigReports, error } = await supabase
         .from('oig_report_entries')
@@ -124,6 +128,7 @@ export const analyzeDatabaseData = async () => {
     }
 
     // 5. Analyze scorecard data
+    console.log('📊 Analyzing scorecard data...');
     if (analysis.tables.scorecards?.accessible) {
       const { data: scorecards, error } = await supabase
         .from('scorecards')
@@ -155,6 +160,7 @@ export const analyzeDatabaseData = async () => {
     }
 
     // 6. Check for data quality issues
+    console.log('🔍 Checking data quality...');
     
     // Check for facilities without VISN (only flag if significant portion)
     if (analysis.sampleData.facilities) {
@@ -183,9 +189,11 @@ export const analyzeDatabaseData = async () => {
       }
     }
 
+    console.log('✅ Database analysis complete');
     return analysis;
 
   } catch (error) {
+    console.error('❌ Database analysis failed:', error);
     analysis.issues.push(`Analysis failed: ${error.message}`);
     return analysis;
   }

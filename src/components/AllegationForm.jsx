@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, AlertTriangle, Building } from 'lucide-react';
+import { Send, AlertTriangle, FileText, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/lib/supabaseClient';
@@ -97,6 +97,7 @@ const AllegationForm = ({ onSubmit }) => {
         });
       }
     } catch (error) {
+      console.error("Error submitting facility allegation:", error);
       toast({
         title: "❌ Submission Failed",
         description: "Could not submit your facility allegation. Please try again. " + error.message,

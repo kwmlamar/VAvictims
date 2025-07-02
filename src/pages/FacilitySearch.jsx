@@ -47,6 +47,7 @@ const FacilitySearch = () => {
       setFacilities(formattedData);
 
     } catch (error) {
+      console.error("Error fetching facilities:", error);
       toast({
         title: "Error Fetching Facilities",
         description: "Could not load facility data. " + error.message,

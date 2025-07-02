@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, AlertTriangle, Globe } from 'lucide-react';
+import { Send, AlertTriangle, Globe, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/lib/supabaseClient';
@@ -109,6 +109,7 @@ const ExternalGroupAllegationForm = ({ onSubmit }) => {
         });
       }
     } catch (error) {
+      console.error("Error submitting External Group allegation:", error);
       toast({
         title: "❌ Submission Failed",
         description: "Could not submit your External Group allegation. Please try again. " + error.message,

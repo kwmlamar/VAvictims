@@ -32,17 +32,19 @@ const EvidenceUpload = ({ onUpload }) => {
 
   const handleDrop = useCallback((e) => {
     e.preventDefault();
-    const files = Array.from(e.dataTransfer.files);
-    handleFiles(files);
-  }, [handleFiles]);
+    setDragOver(false);
+    
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    handleFiles(droppedFiles);
+  }, []);
 
   const handleFileSelect = (e) => {
     const selectedFiles = Array.from(e.target.files);
     handleFiles(selectedFiles);
   };
 
-  const handleFiles = useCallback((files) => {
-    const validFiles = files.filter(file => {
+  const handleFiles = (newFiles) => {
+    const validFiles = newFiles.filter(file => {
       const maxSize = 50 * 1024 * 1024; // 50MB
       const allowedTypes = [
         'application/pdf',
@@ -89,17 +91,17 @@ const EvidenceUpload = ({ onUpload }) => {
     }));
 
     setFiles(prev => [...prev, ...filesWithMetadata]);
-  }, [toast]);
+  };
 
   const removeFile = (id) => {
     setFiles(prev => prev.filter(f => f.id !== id));
   };
 
-  const handleUpload = useCallback(async () => {
+  const uploadFiles = async () => {
     if (files.length === 0) return;
     
     setUploading(true);
-    const uploadedFiles = [];
+    const uploadedFileRecords = [];
 
     for (const fileItem of files) {
       if (fileItem.status === 'completed') continue;
@@ -116,32 +118,32 @@ const EvidenceUpload = ({ onUpload }) => {
 
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage
+        const { data: publicUrlData } = supabase.storage
           .from('complaint_pdfs')
           .getPublicUrl(filePath);
         
-        // Create database record
         const record = {
           file_name: fileItem.name,
-          file_url: urlData.publicUrl,
-          file_size: fileItem.size,
-          file_type: fileItem.type,
-          uploaded_at: new Date().toISOString(),
-          status: 'completed'
+          storage_path: filePath,
+          content_type: fileItem.type,
+          size: fileItem.size,
+          status: 'uploaded',
+          // user_id: (await supabase.auth.getUser()).data.user?.id, // Uncomment if user auth is set up
         };
 
         const { error: dbError } = await supabase
-          .from('evidence_files')
+          .from('uploaded_documents')
           .insert([record]);
         
         if (dbError) throw dbError;
         
-        uploadedFiles.push(record);
+        uploadedFileRecords.push(record);
         setFiles(prev => prev.map(f => 
           f.id === fileItem.id ? { ...f, status: 'completed' } : f
         ));
 
       } catch (error) {
+        console.error("Error uploading file:", error);
         setFiles(prev => prev.map(f => 
           f.id === fileItem.id ? { ...f, status: 'failed' } : f
         ));
@@ -154,14 +156,14 @@ const EvidenceUpload = ({ onUpload }) => {
     }
     
     setUploading(false);
-    if (uploadedFiles.length > 0) {
-      onUpload(uploadedFiles);
+    if (uploadedFileRecords.length > 0) {
+      onUpload(uploadedFileRecords);
     }
     
     setTimeout(() => {
       setFiles(prev => prev.filter(f => f.status !== 'completed'));
     }, 2000);
-  }, [files, onUpload, toast]);
+  };
 
   const getFileIcon = (type) => {
     if (type.startsWith('image/')) return <Image className="h-5 w-5" />;
@@ -283,7 +285,7 @@ const EvidenceUpload = ({ onUpload }) => {
             {files.filter(f=> f.status !== 'completed').length} file{files.filter(f=> f.status !== 'completed').length !== 1 ? 's' : ''} ready to upload
           </p>
           <Button
-            onClick={handleUpload}
+            onClick={uploadFiles}
             disabled={uploading || files.every(f => f.status === 'completed' || f.status === 'failed')}
             className="bg-green-600 hover:bg-green-700"
           >
