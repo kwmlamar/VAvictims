@@ -10,7 +10,8 @@ import {
   Shield,
   Upload,
   Download,
-  RefreshCw
+  RefreshCw,
+  Mic
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -20,6 +21,7 @@ import AdminDashboardTab from '@/components/admin/AdminDashboardTab';
 import AdminStorageTab from '@/components/admin/AdminStorageTab';
 import AdminUsersTab from '@/components/admin/AdminUsersTab';
 import AdminSettingsTab from '@/components/admin/AdminSettingsTab';
+import AdminPodcastTab from '@/components/admin/AdminPodcastTab';
 
 const AdminPortal = () => {
   const { toast } = useToast();
@@ -281,24 +283,28 @@ const AdminPortal = () => {
           transition={{ delay: 0.2 }}
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 bg-white/10 backdrop-blur-sm">
-              <TabsTrigger value="dashboard" className="data-[state=active]:bg-blue-600">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Dashboard
-              </TabsTrigger>
-              <TabsTrigger value="storage" className="data-[state=active]:bg-blue-600">
-                <Database className="h-4 w-4 mr-2" />
-                Storage
-              </TabsTrigger>
-              <TabsTrigger value="users" className="data-[state=active]:bg-blue-600">
-                <Users className="h-4 w-4 mr-2" />
-                Users
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="data-[state=active]:bg-blue-600">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </TabsTrigger>
-            </TabsList>
+                      <TabsList className="grid w-full grid-cols-5 bg-white/10 backdrop-blur-sm">
+            <TabsTrigger value="dashboard" className="data-[state=active]:bg-blue-600">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="storage" className="data-[state=active]:bg-blue-600">
+              <Database className="h-4 w-4 mr-2" />
+              Storage
+            </TabsTrigger>
+            <TabsTrigger value="users" className="data-[state=active]:bg-blue-600">
+              <Users className="h-4 w-4 mr-2" />
+              Users
+            </TabsTrigger>
+            <TabsTrigger value="podcast" className="data-[state=active]:bg-blue-600">
+              <Mic className="h-4 w-4 mr-2" />
+              Podcasts
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="data-[state=active]:bg-blue-600">
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
 
             <TabsContent value="dashboard">
               <AdminDashboardTab systemStats={systemStats} loadingStats={loadingStats} />
@@ -308,6 +314,9 @@ const AdminPortal = () => {
             </TabsContent>
             <TabsContent value="users">
               <AdminUsersTab handleAction={handleAction} />
+            </TabsContent>
+            <TabsContent value="podcast">
+              <AdminPodcastTab />
             </TabsContent>
             <TabsContent value="settings">
               <AdminSettingsTab handleAction={handleAction} />

@@ -14,6 +14,9 @@ import VISNAnalysis from '@/pages/VISNAnalysis';
 import DeveloperPortal from '@/pages/DeveloperPortal';
 import About from '@/pages/About';
 import Calculations from '@/pages/Calculations';
+import HelpPage from '@/pages/HelpPage';
+import GroupChat from '@/components/GroupChat';
+import Podcasts from '@/pages/Podcasts';
 
 function App() {
   return (
@@ -40,6 +43,9 @@ function App() {
                 <Route path="/analysis" element={<DataAnalysis />} />
 
                 <Route path="/visn-analysis" element={<VISNAnalysis />} />
+                <Route path="/help" element={<HelpPage />} />
+                <Route path="/chat" element={<GroupChat />} />
+                <Route path="/podcasts" element={<Podcasts />} />
               </Routes>
             </Layout>
           } />

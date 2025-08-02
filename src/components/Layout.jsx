@@ -12,7 +12,10 @@ import {
   AlertTriangle,
   Code,
   Info,
-  Calculator
+  Calculator,
+  HelpCircle,
+  MessageCircle,
+  Mic
 } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -30,6 +33,9 @@ const Layout = ({ children }) => {
     { name: 'Calculations', href: '/calculations', icon: Calculator },
     { name: 'User Portal', href: '/portal', icon: FileText },
     { name: 'Data Analysis', href: '/analysis', icon: TrendingUp },
+    { name: 'Podcasts', href: '/podcasts', icon: Mic },
+    { name: 'Help & Support', href: '/help', icon: HelpCircle },
+    { name: 'Community Chat', href: '/chat', icon: MessageCircle },
     { name: 'Admin Portal', href: '/admin', icon: Settings },
     { name: 'Developer', href: '/dev/portal', icon: Code },
   ];

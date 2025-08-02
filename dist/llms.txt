@@ -4,6 +4,7 @@
 - [Dashboard - VA Accountability Platform](/dashboard): Real-time overview of VA facility performance, scores, and accountability metrics across the nation.
 - [Data Analysis - VA Accountability Platform](/dataanalysis): Advanced analytics, trends, and patterns in VA facility performance and accountability metrics.
 - [Facility Search - VA Accountability Platform](/facilitysearch): Search and explore VA facilities, VISNs, clinics, and CROCs with comprehensive scoring and accountability data.
+- [Podcasts - VA Victims](/podcasts): Listen to podcasts about VA accountability, veteran support, and healthcare transparency.
 - [Scorecards - VA Accountability Platform](/scorecards): Comprehensive scorecards for VA facilities, VISNs, and national performance with detailed metrics and accountability tracking.
 - [Scoring Methodology - VA Accountability Platform](/calculations): Explanation of the grading and formula used for scoring VA facilities, VISNs, and national performance.
 - [User Portal - VA Accountability Platform](/userportal): Submit allegations, upload evidence, and track your submissions in the VA accountability platform.
