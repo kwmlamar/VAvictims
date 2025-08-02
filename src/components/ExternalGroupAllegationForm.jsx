@@ -76,7 +76,7 @@ const ExternalGroupAllegationForm = ({ onSubmit }) => {
       external_group: formData.externalGroup,
       external_violation_type: formData.violationType,
       description: formData.description,
-      date_of_incident: formData.dateOfIncident || null,
+      date_of_incident: formData.dateOfIncident && formData.dateOfIncident.trim() !== '' ? formData.dateOfIncident : null,
       contact_email: formData.anonymous ? null : formData.contactInfo, 
       is_anonymous: formData.anonymous,
       status: 'pending',

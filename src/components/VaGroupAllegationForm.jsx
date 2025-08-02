@@ -80,7 +80,7 @@ const VaGroupAllegationForm = ({ onSubmit }) => {
       va_group: formData.vaGroup,
       complicity_type: formData.complicityType,
       description: formData.description,
-      date_of_incident: formData.dateOfIncident || null,
+      date_of_incident: formData.dateOfIncident && formData.dateOfIncident.trim() !== '' ? formData.dateOfIncident : null,
       contact_email: formData.anonymous ? null : formData.contactInfo, 
       is_anonymous: formData.anonymous,
       status: 'pending',

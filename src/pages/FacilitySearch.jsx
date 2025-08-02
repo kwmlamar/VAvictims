@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { Search, MapPin, Filter, AlertTriangle } from 'lucide-react';
+import { Search, MapPin, Filter, AlertTriangle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import SearchFilters from '@/components/SearchFilters';
@@ -21,7 +21,7 @@ const FacilitySearch = () => {
   const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchFacilities = async () => {
+  const fetchFacilities = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.rpc('search_facilities', {
@@ -57,12 +57,22 @@ const FacilitySearch = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, filters, toast]);
   
   useEffect(() => {
     fetchFacilities();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [fetchFacilities]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchTerm !== '') {
+        fetchFacilities();
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, fetchFacilities]);
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
@@ -74,6 +84,10 @@ const FacilitySearch = () => {
 
   const handleSearchClick = () => {
     fetchFacilities();
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
   };
 
 
@@ -119,8 +133,16 @@ const FacilitySearch = () => {
                 value={searchTerm}
                 onChange={handleSearchInputChange}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearchClick()}
-                className="w-full pl-12 pr-4 py-3 search-input text-white placeholder-blue-300 focus:outline-none"
+                className="w-full pl-12 pr-12 py-3 search-input text-white placeholder-blue-300 focus:outline-none"
               />
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
             </div>
             <Button 
               onClick={handleSearchClick}
@@ -156,7 +178,7 @@ const FacilitySearch = () => {
         >
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-white">
-              Search Results ({facilities.length})
+              {searchTerm ? `Search Results for "${searchTerm}"` : 'All Facilities'} ({facilities.length})
             </h2>
             {facilities.some(f => f.score < 50) && (
               <div className="flex items-center space-x-2 text-amber-400">
@@ -180,11 +202,19 @@ const FacilitySearch = () => {
             </div>
           )}
 
-          {!loading && facilities.length === 0 && (
+          {!loading && facilities.length === 0 && searchTerm && (
             <div className="text-center py-12">
               <MapPin className="h-12 w-12 text-blue-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">No facilities found</h3>
               <p className="text-blue-200">Try adjusting your search criteria or filters</p>
+            </div>
+          )}
+
+          {!loading && facilities.length === 0 && !searchTerm && (
+            <div className="text-center py-12">
+              <Search className="h-12 w-12 text-blue-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">Ready to search</h3>
+              <p className="text-blue-200">Enter a search term or use filters to find facilities</p>
             </div>
           )}
         </motion.div>

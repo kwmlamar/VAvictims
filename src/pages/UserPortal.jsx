@@ -118,10 +118,25 @@ const UserPortal = () => {
         throw new Error('Database table not accessible');
       }
 
+      // Determine the complaint type based on the form data
+      let complaintType = formData.type;
+      
+      // Handle different form types
+      if (formData.va_group && formData.complicity_type) {
+        // VA Group allegation
+        complaintType = 'VA Group Complicity/Integrity Violation';
+      } else if (formData.external_group && formData.external_violation_type) {
+        // External Group allegation
+        complaintType = 'External Group Violation';
+      } else if (!complaintType) {
+        // Fallback for facility allegations
+        complaintType = 'General Complaint';
+      }
+
       // Prepare data for database insertion
       const submissionData = {
         facility_name_submitted: formData.facility,
-        complaint_type: formData.type,
+        complaint_type: complaintType,
         description: formData.description,
         veteran_name: formData.veteranName,
         veteran_id_last4: formData.veteranId,
@@ -133,7 +148,7 @@ const UserPortal = () => {
         external_group: formData.external_group,
         external_violation_type: formData.external_violation_type,
         category: formData.category || 'General',
-        date_of_incident: formData.dateOfIncident,
+        date_of_incident: formData.dateOfIncident && formData.dateOfIncident.trim() !== '' ? formData.dateOfIncident : null,
         is_anonymous: formData.isAnonymous || false,
         facility_type_submitted: formData.facilityType,
         location_submitted: formData.location,
@@ -186,9 +201,31 @@ const UserPortal = () => {
 
     } catch (error) {
       console.error('❌ Error submitting allegation:', error);
+      
+      // Handle specific constraint errors
+      let errorMessage = "Could not submit your allegation. Please try again or contact support if the problem persists.";
+      
+      if (error.code === '23502') {
+        if (error.message.includes('complaint_type')) {
+          errorMessage = "There was an issue with the complaint type. Please ensure all required fields are filled.";
+        } else {
+          errorMessage = "Required information is missing. Please check all required fields and try again.";
+        }
+      } else if (error.code === '23514') {
+        if (error.message.includes('category_check')) {
+          errorMessage = "There was an issue with the complaint category. Please try again or contact support.";
+        } else if (error.message.includes('status_check')) {
+          errorMessage = "There was an issue with the complaint status. Please try again or contact support.";
+        } else {
+          errorMessage = "There was a validation error with your submission. Please check all required fields and try again.";
+        }
+      } else if (error.message) {
+        errorMessage += " " + error.message;
+      }
+      
       toast({
         title: "❌ Submission Failed",
-        description: "Could not submit your allegation. Please try again or contact support if the problem persists.",
+        description: errorMessage,
         variant: "destructive",
         duration: 5000,
       });

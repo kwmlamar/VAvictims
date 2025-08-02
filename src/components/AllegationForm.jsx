@@ -62,7 +62,7 @@ const AllegationForm = ({ onSubmit }) => {
       facility_name_submitted: formData.facility,
       complaint_type: formData.type,
       description: formData.description,
-      date_of_incident: formData.dateOfIncident || null,
+      date_of_incident: formData.dateOfIncident && formData.dateOfIncident.trim() !== '' ? formData.dateOfIncident : null,
       contact_email: formData.anonymous ? null : formData.contactInfo, 
       is_anonymous: formData.anonymous,
       status: 'pending',
@@ -70,7 +70,7 @@ const AllegationForm = ({ onSubmit }) => {
       va_group: null,
       complicity_type: null,
       user_id: null,
-      category: 'General' // Use a more generic category value
+      category: 'General Complaint' // Use a more specific category value
     };
     
     try {
@@ -98,9 +98,25 @@ const AllegationForm = ({ onSubmit }) => {
       }
     } catch (error) {
       console.error("Error submitting facility allegation:", error);
+      
+      // Handle specific constraint errors
+      let errorMessage = "Could not submit your facility allegation. Please try again.";
+      
+      if (error.code === '23514') {
+        if (error.message.includes('category_check')) {
+          errorMessage = "There was an issue with the complaint category. Please try again or contact support.";
+        } else if (error.message.includes('status_check')) {
+          errorMessage = "There was an issue with the complaint status. Please try again or contact support.";
+        } else {
+          errorMessage = "There was a validation error with your submission. Please check all required fields and try again.";
+        }
+      } else if (error.message) {
+        errorMessage += " " + error.message;
+      }
+      
       toast({
         title: "❌ Submission Failed",
-        description: "Could not submit your facility allegation. Please try again. " + error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     }
