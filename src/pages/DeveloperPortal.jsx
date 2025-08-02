@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, StickyNote, Code, BookOpen, Save, RefreshCw, ArrowLeft, Bot, Cpu } from 'lucide-react';
+import { LayoutDashboard, StickyNote, Code, BookOpen, Save, RefreshCw, ArrowLeft, Bot, Cpu, Upload } from 'lucide-react';
 import DeveloperDashboard from '@/components/developer/DeveloperDashboard';
 import DeveloperNotes from '@/components/developer/DeveloperNotes';
 import DeveloperCodeView from '@/components/developer/DeveloperCodeView';
 import DeveloperScraper from '@/components/developer/DeveloperScraper';
 import DeveloperProcessor from '@/components/developer/DeveloperProcessor';
+import DeveloperDataUpload from '@/components/developer/DeveloperDataUpload';
 
 const DeveloperPortal = () => {
   const { toast } = useToast();
@@ -34,6 +35,7 @@ const DeveloperPortal = () => {
     { id: 'code', label: 'Code & Artifacts', icon: BookOpen },
     { id: 'scraper', label: 'Scraper Control', icon: Bot },
     { id: 'processor', label: 'Data Processor', icon: Cpu },
+    { id: 'upload', label: 'Data Upload', icon: Upload },
     { id: 'notes', label: 'Notes', icon: StickyNote },
   ];
 
@@ -101,6 +103,7 @@ const DeveloperPortal = () => {
             {activeTab === 'code' && <DeveloperCodeView />}
             {activeTab === 'scraper' && <DeveloperScraper />}
             {activeTab === 'processor' && <DeveloperProcessor />}
+            {activeTab === 'upload' && <DeveloperDataUpload />}
             {activeTab === 'notes' && <DeveloperNotes />}
           </motion.div>
         </AnimatePresence>
